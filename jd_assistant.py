@@ -425,7 +425,9 @@ class Assistant(object):
             'callback': 'jQuery{}'.format(random.randint(1000000, 9999999)),
             'extraParam': '{"originid":"1"}',  # get error stock state without this param
             'cat': cat,  # get 403 Forbidden without this param (obtained from the detail page)
-            # 'venderId': ''  # won't return seller information without this param (can be ignored)
+            'fqsp' : 0,
+            'choseSuitSkuIds': '',
+            'venderId': '1000084390'  # won't return seller information without this param (can be ignored)
         }
         headers = {
             'User-Agent': USER_AGENT,
@@ -434,8 +436,13 @@ class Assistant(object):
         resp = requests.get(url=url, params=payload, headers=headers)
 
         resp_json = parse_json(resp.text)
-        stock_state = resp_json['StockState']  # 33 -- 现货  34 -- 无货  40 -- 可配货
-        stock_state_name = resp_json['StockStateName']
+        try:
+            stock_state = resp_json['StockState']  # 33 -- 现货  34 -- 无货  40 -- 可配货
+            stock_state_name = resp_json['StockStateName']
+        except KeyError:
+            stock_state = resp_json['stock']['StockState']  # 33 -- 现货  34 -- 无货  40 -- 可配货
+            stock_state_name = resp_json['stock']['StockStateName']
+            
         return stock_state, stock_state_name  # (33, '现货') (34, '无货') (36, '采购中') (40, '可配货')
 
     def get_multi_item_stock(self, sku_ids, area):
